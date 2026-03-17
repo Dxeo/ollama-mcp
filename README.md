@@ -60,6 +60,8 @@ The server exits with an error if any required variable is missing.
 
 The server communicates over **stdio** using the MCP protocol. Any MCP-compatible client can use it by pointing to the binary and setting the required environment variables.
 
+This repo ships an [AGENT.md](AGENT.md) file with instructions that tell the agent to actively use the ollama-mcp tools. You can copy its contents into your agent instructions.
+
 ### Claude Code
 
 Add to `~/.claude/settings.json` or project `.mcp.json`:
@@ -78,8 +80,6 @@ Add to `~/.claude/settings.json` or project `.mcp.json`:
   }
 }
 ```
-
-This repo ships a [AGENT.md](AGENT.md) file with instructions that tell Claude to actively use the ollama-mcp tools. Copy its contents into your project's [AGENT.md](AGENT.md) or reference it in your Claude Code settings.
 
 ### Other MCP Clients
 
