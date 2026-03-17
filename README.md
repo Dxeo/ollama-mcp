@@ -2,12 +2,15 @@
 
 An MCP (Model Context Protocol) server that routes AI tasks to local [Ollama](https://ollama.com/) models. Provides private, cost-free AI capabilities — reasoning, code generation, embeddings, and semantic search — directly from your machine.
 
-> Inspired by [jonsflow/ollama-mcp](https://github.com/jonsflow/ollama-mcp).
+Works with any MCP-compatible agent or client, including [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com/), [Cline](https://github.com/cline/cline), and others.
+
+> This project was inspired by and built upon ideas from [jonsflow/ollama-mcp](https://github.com/jonsflow/ollama-mcp). Full credit to the original author for the concept.
 
 ## Features
 
 - **Local-first AI** — all inference runs on your hardware via Ollama, no API keys or cloud calls
 - **3 MCP tools** — reasoning, embeddings, and document filtering
+- **MCP standard** — works with any agent or client that supports the Model Context Protocol
 - **Configurable context window** — set the model's context size per environment
 - **Structured logging** — JSON-formatted logs via Go's `slog`
 - **Retry logic** — automatic retries with exponential backoff for Ollama API calls
@@ -46,16 +49,20 @@ All configuration is via environment variables:
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `REASONING_MODEL` | Yes | — | Ollama model for reasoning, code gen, and preprocessing (e.g. `qwen3:1.7b`) |
+| `REASONING_MODEL` | Yes | — | Ollama model for reasoning and code generation (e.g. `qwen3:1.7b`) |
 | `EMBEDDING_MODEL` | Yes | — | Ollama model for embeddings and document filtering (e.g. `nomic-embed-text`) |
 | `CONTEXT_SIZE` | Yes | — | Context window size in tokens for the reasoning model (e.g. `16384`) |
 | `OLLAMA_HOST` | No | `http://localhost:11434` | Ollama server address |
 
 The server exits with an error if any required variable is missing.
 
-## Claude Code Integration
+## Integration
 
-Add to your Claude Code MCP settings (`~/.claude/settings.json` or project `.mcp.json`):
+The server communicates over **stdio** using the MCP protocol. Any MCP-compatible client can use it by pointing to the binary and setting the required environment variables.
+
+### Claude Code
+
+Add to `~/.claude/settings.json` or project `.mcp.json`:
 
 ```json
 {
@@ -72,11 +79,11 @@ Add to your Claude Code MCP settings (`~/.claude/settings.json` or project `.mcp
 }
 ```
 
-Replace the path and model names with your own.
+This repo ships a [`CLAUDE.md`](CLAUDE.md) file with instructions that tell Claude to actively use the ollama-mcp tools. Copy its contents into your project's `CLAUDE.md` or reference it in your Claude Code settings.
 
-### Recommended: Add the CLAUDE.md prompt
+### Other MCP Clients
 
-This repo ships a [`CLAUDE.md`](CLAUDE.md) file with instructions that tell Claude to actively use the ollama-mcp tools. To enable it, add the file path to your Claude Code project settings or copy its contents into your project's own `CLAUDE.md`.
+For any MCP-compatible client, configure a stdio server with the binary path and environment variables above. Refer to your client's documentation for the exact configuration format.
 
 ## Tools
 

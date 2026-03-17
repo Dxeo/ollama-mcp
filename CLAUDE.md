@@ -1,6 +1,6 @@
-# Ollama MCP — Claude Code Instructions
+# Ollama MCP — Agent Instructions
 
-> Add this file to your Claude Code project instructions or copy its contents into your project's `CLAUDE.md`.
+> This file provides instructions for AI agents to effectively use the ollama-mcp tools. For Claude Code, add this to your project's `CLAUDE.md`. For other MCP clients, adapt these instructions to your agent's prompt configuration.
 
 ## MANDATORY: Use Ollama MCP Tools for Local AI Tasks
 
