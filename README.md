@@ -70,8 +70,8 @@ Add to `~/.claude/settings.json` or project `.mcp.json`:
     "ollama-mcp": {
       "command": "/absolute/path/to/ollama-mcp",
       "env": {
-        "REASONING_MODEL": "your_reasoning_model",
-        "EMBEDDING_MODEL": "your_embedding_model",
+        "REASONING_MODEL": "qwen3:1.7b",
+        "EMBEDDING_MODEL": "nomic-embed-text",
         "CONTEXT_SIZE": "16384"
       }
     }
