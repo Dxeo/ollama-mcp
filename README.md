@@ -2,6 +2,8 @@
 
 An MCP (Model Context Protocol) server that routes AI tasks to local [Ollama](https://ollama.com/) models. Provides private, cost-free AI capabilities — reasoning, code generation, embeddings, and semantic search — directly from your machine.
 
+> Inspired by [jonsflow/ollama-mcp](https://github.com/jonsflow/ollama-mcp).
+
 ## Features
 
 - **Local-first AI** — all inference runs on your hardware via Ollama, no API keys or cloud calls
