@@ -46,7 +46,7 @@ All configuration is via environment variables:
 |---|---|---|---|
 | `REASONING_MODEL` | Yes | — | Ollama model for reasoning, code gen, and preprocessing (e.g. `qwen3:1.7b`) |
 | `EMBEDDING_MODEL` | Yes | — | Ollama model for embeddings and document filtering (e.g. `nomic-embed-text`) |
-| `CONTEXT_SIZE` | Yes | — | Context window size in tokens for the reasoning model (recommended: `16384`) |
+| `CONTEXT_SIZE` | Yes | — | Context window size in tokens for the reasoning model (e.g. `16384`) |
 | `OLLAMA_HOST` | No | `http://localhost:11434` | Ollama server address |
 
 The server exits with an error if any required variable is missing.
