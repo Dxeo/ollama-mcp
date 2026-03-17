@@ -24,7 +24,7 @@ func NewOllamaClient() (*OllamaClient, error) {
 }
 
 // Chat sends a chat message and returns the full accumulated response.
-func (o *OllamaClient) Chat(ctx context.Context, model, prompt string) (string, error) {
+func (o *OllamaClient) Chat(ctx context.Context, model, prompt string, contextSize int) (string, error) {
 	if model == "" {
 		return "", fmt.Errorf("chat: model name is required")
 	}
@@ -42,6 +42,7 @@ func (o *OllamaClient) Chat(ctx context.Context, model, prompt string) (string, 
 			Messages: []api.Message{
 				{Role: "user", Content: prompt},
 			},
+			Options: map[string]any{"num_ctx": contextSize},
 		}
 
 		err := o.client.Chat(ctx, req, func(resp api.ChatResponse) error {
@@ -57,7 +58,7 @@ func (o *OllamaClient) Chat(ctx context.Context, model, prompt string) (string, 
 }
 
 // Generate sends a generate request and returns the full accumulated response.
-func (o *OllamaClient) Generate(ctx context.Context, model, prompt string) (string, error) {
+func (o *OllamaClient) Generate(ctx context.Context, model, prompt string, contextSize int) (string, error) {
 	if model == "" {
 		return "", fmt.Errorf("generate: model name is required")
 	}
@@ -70,9 +71,10 @@ func (o *OllamaClient) Generate(ctx context.Context, model, prompt string) (stri
 		stream := false
 
 		req := &api.GenerateRequest{
-			Model:  model,
-			Prompt: prompt,
-			Stream: &stream,
+			Model:   model,
+			Prompt:  prompt,
+			Stream:  &stream,
+			Options: map[string]any{"num_ctx": contextSize},
 		}
 
 		err := o.client.Generate(ctx, req, func(resp api.GenerateResponse) error {

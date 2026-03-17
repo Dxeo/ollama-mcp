@@ -18,6 +18,7 @@ type Handlers struct {
 	ollama         *OllamaClient
 	reasoningModel string
 	embeddingModel string
+	contextSize    int
 }
 
 // HandleReasonTask performs reasoning/code generation using the chat model.
@@ -34,7 +35,7 @@ func (h *Handlers) HandleReasonTask(ctx context.Context, request mcp.CallToolReq
 		return mcp.NewToolResultError("prompt must not be empty"), nil
 	}
 
-	result, err := h.ollama.Chat(ctx, h.reasoningModel, prompt)
+	result, err := h.ollama.Chat(ctx, h.reasoningModel, prompt, h.contextSize)
 	if err != nil {
 		slog.Error("ollama call failed", "tool", "reason_task", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("reasoning failed: %v", err)), nil
@@ -148,7 +149,7 @@ func (h *Handlers) HandlePreprocessCode(ctx context.Context, request mcp.CallToo
 	}
 
 	prompt := fmt.Sprintf(preprocessCodePrompt, code)
-	result, err := h.ollama.Generate(ctx, h.reasoningModel, prompt)
+	result, err := h.ollama.Generate(ctx, h.reasoningModel, prompt, h.contextSize)
 	if err != nil {
 		slog.Error("ollama call failed", "tool", "preprocess_code", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("preprocessing failed: %v", err)), nil
