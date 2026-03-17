@@ -57,38 +57,6 @@ func (o *OllamaClient) Chat(ctx context.Context, model, prompt string, contextSi
 	})
 }
 
-// Generate sends a generate request and returns the full accumulated response.
-func (o *OllamaClient) Generate(ctx context.Context, model, prompt string, contextSize int) (string, error) {
-	if model == "" {
-		return "", fmt.Errorf("generate: model name is required")
-	}
-	if prompt == "" {
-		return "", fmt.Errorf("generate: prompt is required")
-	}
-
-	return withRetry(ctx, "generate", func() (string, error) {
-		var b strings.Builder
-		stream := false
-
-		req := &api.GenerateRequest{
-			Model:   model,
-			Prompt:  prompt,
-			Stream:  &stream,
-			Options: map[string]any{"num_ctx": contextSize},
-		}
-
-		err := o.client.Generate(ctx, req, func(resp api.GenerateResponse) error {
-			b.WriteString(resp.Response)
-			return nil
-		})
-		if err != nil {
-			return "", fmt.Errorf("generate failed: %w", err)
-		}
-
-		return b.String(), nil
-	})
-}
-
 // Embed generates embeddings for the given text and returns the vector.
 func (o *OllamaClient) Embed(ctx context.Context, model, text string) ([]float32, error) {
 	if model == "" {

@@ -11,8 +11,6 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-const preprocessCodePrompt = "Format and clean this code. Return only the cleaned code:\n%s"
-
 // Handlers holds the shared state needed by tool handlers.
 type Handlers struct {
 	ollama         *OllamaClient
@@ -134,32 +132,3 @@ func (h *Handlers) HandleFilterDocs(ctx context.Context, request mcp.CallToolReq
 	return mcp.NewToolResultText(string(data)), nil
 }
 
-// HandlePreprocessCode cleans and formats code using the generate model.
-func (h *Handlers) HandlePreprocessCode(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	slog.Info("handling tool call", "tool", "preprocess_code")
-
-	code, err := request.RequireString("code")
-	if err != nil {
-		slog.Error("invalid parameter", "tool", "preprocess_code", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("missing required parameter: %v", err)), nil
-	}
-	if strings.TrimSpace(code) == "" {
-		slog.Error("empty input", "tool", "preprocess_code")
-		return mcp.NewToolResultError("code must not be empty"), nil
-	}
-
-	prompt := fmt.Sprintf(preprocessCodePrompt, code)
-	result, err := h.ollama.Generate(ctx, h.reasoningModel, prompt, h.contextSize)
-	if err != nil {
-		slog.Error("ollama call failed", "tool", "preprocess_code", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("preprocessing failed: %v", err)), nil
-	}
-
-	data, err := json.Marshal(map[string]any{"processed_code": result})
-	if err != nil {
-		slog.Error("json marshal failed", "tool", "preprocess_code", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal result: %v", err)), nil
-	}
-
-	return mcp.NewToolResultText(string(data)), nil
-}

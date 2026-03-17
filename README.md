@@ -7,7 +7,7 @@ An MCP (Model Context Protocol) server that routes AI tasks to local [Ollama](ht
 ## Features
 
 - **Local-first AI** — all inference runs on your hardware via Ollama, no API keys or cloud calls
-- **4 MCP tools** — reasoning, embeddings, document filtering, and code preprocessing
+- **3 MCP tools** — reasoning, embeddings, and document filtering
 - **Configurable context window** — set the model's context size per environment
 - **Structured logging** — JSON-formatted logs via Go's `slog`
 - **Retry logic** — automatic retries with exponential backoff for Ollama API calls
@@ -83,7 +83,6 @@ This repo ships a [`CLAUDE.md`](CLAUDE.md) file with instructions that tell Clau
 | Tool | Description | Model |
 |---|---|---|
 | `reason_task` | Reasoning, code generation, summarization | `REASONING_MODEL` |
-| `preprocess_code` | Clean, format, and preprocess code | `REASONING_MODEL` |
 | `embed_text` | Generate text embeddings | `EMBEDDING_MODEL` |
 | `filter_docs` | Rank documents by semantic similarity to a query | `EMBEDDING_MODEL` |
 

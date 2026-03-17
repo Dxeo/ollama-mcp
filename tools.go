@@ -31,10 +31,3 @@ var FilterDocsTool = mcp.NewTool("filter_docs",
 	),
 )
 
-var PreprocessCodeTool = mcp.NewTool("preprocess_code",
-	mcp.WithDescription("Clean, format, and preprocess code using local model"),
-	mcp.WithString("code",
-		mcp.Required(),
-		mcp.Description("Code to clean and format"),
-	),
-)

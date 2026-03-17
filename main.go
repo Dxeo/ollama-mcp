@@ -59,7 +59,6 @@ func main() {
 	s.AddTool(ReasonTaskTool, h.HandleReasonTask)
 	s.AddTool(EmbedTextTool, h.HandleEmbedText)
 	s.AddTool(FilterDocsTool, h.HandleFilterDocs)
-	s.AddTool(PreprocessCodeTool, h.HandlePreprocessCode)
 
 	slog.Info("starting ollama-mcp server", "reasoning_model", reasoningModel, "embedding_model", embeddingModel, "context_size", contextSize)
 
