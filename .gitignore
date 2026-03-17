@@ -1,0 +1,29 @@
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/ollama-mcp
+
+# Test binaries
+*.test
+
+# Coverage
+*.out
+coverage.html
+
+# Build output
+/dist/
+/bin/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
