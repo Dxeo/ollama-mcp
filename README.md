@@ -87,4 +87,4 @@ This repo ships a [`CLAUDE.md`](CLAUDE.md) file with instructions that tell Clau
 
 ## License
 
-MIT
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
