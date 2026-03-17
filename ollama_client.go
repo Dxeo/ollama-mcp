@@ -25,63 +25,90 @@ func NewOllamaClient() (*OllamaClient, error) {
 
 // Chat sends a chat message and returns the full accumulated response.
 func (o *OllamaClient) Chat(ctx context.Context, model, prompt string) (string, error) {
-	var b strings.Builder
-	stream := false
-
-	req := &api.ChatRequest{
-		Model:  model,
-		Stream: &stream,
-		Messages: []api.Message{
-			{Role: "user", Content: prompt},
-		},
+	if model == "" {
+		return "", fmt.Errorf("chat: model name is required")
+	}
+	if prompt == "" {
+		return "", fmt.Errorf("chat: prompt is required")
 	}
 
-	err := o.client.Chat(ctx, req, func(resp api.ChatResponse) error {
-		b.WriteString(resp.Message.Content)
-		return nil
+	return withRetry(ctx, "chat", func() (string, error) {
+		var b strings.Builder
+		stream := false
+
+		req := &api.ChatRequest{
+			Model:  model,
+			Stream: &stream,
+			Messages: []api.Message{
+				{Role: "user", Content: prompt},
+			},
+		}
+
+		err := o.client.Chat(ctx, req, func(resp api.ChatResponse) error {
+			b.WriteString(resp.Message.Content)
+			return nil
+		})
+		if err != nil {
+			return "", fmt.Errorf("chat failed: %w", err)
+		}
+
+		return b.String(), nil
 	})
-	if err != nil {
-		return "", fmt.Errorf("chat failed: %w", err)
-	}
-
-	return b.String(), nil
 }
 
 // Generate sends a generate request and returns the full accumulated response.
 func (o *OllamaClient) Generate(ctx context.Context, model, prompt string) (string, error) {
-	var b strings.Builder
-	stream := false
-
-	req := &api.GenerateRequest{
-		Model:  model,
-		Prompt: prompt,
-		Stream: &stream,
+	if model == "" {
+		return "", fmt.Errorf("generate: model name is required")
+	}
+	if prompt == "" {
+		return "", fmt.Errorf("generate: prompt is required")
 	}
 
-	err := o.client.Generate(ctx, req, func(resp api.GenerateResponse) error {
-		b.WriteString(resp.Response)
-		return nil
+	return withRetry(ctx, "generate", func() (string, error) {
+		var b strings.Builder
+		stream := false
+
+		req := &api.GenerateRequest{
+			Model:  model,
+			Prompt: prompt,
+			Stream: &stream,
+		}
+
+		err := o.client.Generate(ctx, req, func(resp api.GenerateResponse) error {
+			b.WriteString(resp.Response)
+			return nil
+		})
+		if err != nil {
+			return "", fmt.Errorf("generate failed: %w", err)
+		}
+
+		return b.String(), nil
 	})
-	if err != nil {
-		return "", fmt.Errorf("generate failed: %w", err)
-	}
-
-	return b.String(), nil
 }
 
 // Embed generates embeddings for the given text and returns the vector.
 func (o *OllamaClient) Embed(ctx context.Context, model, text string) ([]float32, error) {
-	resp, err := o.client.Embed(ctx, &api.EmbedRequest{
-		Model: model,
-		Input: text,
+	if model == "" {
+		return nil, fmt.Errorf("embed: model name is required")
+	}
+	if text == "" {
+		return nil, fmt.Errorf("embed: text is required")
+	}
+
+	return withRetry(ctx, "embed", func() ([]float32, error) {
+		resp, err := o.client.Embed(ctx, &api.EmbedRequest{
+			Model: model,
+			Input: text,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("embed failed: %w", err)
+		}
+
+		if len(resp.Embeddings) == 0 {
+			return nil, fmt.Errorf("embed: no embeddings returned")
+		}
+
+		return resp.Embeddings[0], nil
 	})
-	if err != nil {
-		return nil, fmt.Errorf("embed failed: %w", err)
-	}
-
-	if len(resp.Embeddings) == 0 {
-		return nil, fmt.Errorf("no embeddings returned")
-	}
-
-	return resp.Embeddings[0], nil
 }

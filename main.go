@@ -1,28 +1,33 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/mark3labs/mcp-go/server"
 )
 
+const (
+	envReasoningModel = "REASONING_MODEL"
+	envEmbeddingModel = "EMBEDDING_MODEL"
+)
+
 func main() {
-	reasoningModel := os.Getenv("REASONING_MODEL")
-	embeddingModel := os.Getenv("EMBEDDING_MODEL")
+	reasoningModel := os.Getenv(envReasoningModel)
+	embeddingModel := os.Getenv(envEmbeddingModel)
 
 	if reasoningModel == "" {
-		fmt.Fprintln(os.Stderr, "error: REASONING_MODEL environment variable is required")
+		slog.Error("environment variable is required", "var", envReasoningModel)
 		os.Exit(1)
 	}
 	if embeddingModel == "" {
-		fmt.Fprintln(os.Stderr, "error: EMBEDDING_MODEL environment variable is required")
+		slog.Error("environment variable is required", "var", envEmbeddingModel)
 		os.Exit(1)
 	}
 
 	ollamaClient, err := NewOllamaClient()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: failed to initialize ollama client: %v\n", err)
+		slog.Error("failed to initialize ollama client", "error", err)
 		os.Exit(1)
 	}
 
@@ -43,12 +48,12 @@ func main() {
 	s.AddTool(FilterDocsTool, h.HandleFilterDocs)
 	s.AddTool(PreprocessCodeTool, h.HandlePreprocessCode)
 
-	fmt.Fprintln(os.Stderr, "ollama-mcp server starting...")
-	fmt.Fprintf(os.Stderr, "  reasoning model: %s\n", reasoningModel)
-	fmt.Fprintf(os.Stderr, "  embedding model: %s\n", embeddingModel)
+	slog.Info("starting ollama-mcp server", "reasoning_model", reasoningModel, "embedding_model", embeddingModel)
 
 	if err := server.ServeStdio(s); err != nil {
-		fmt.Fprintf(os.Stderr, "error: server failed: %v\n", err)
+		slog.Error("server failed", "error", err)
 		os.Exit(1)
 	}
+
+	slog.Info("server stopped")
 }

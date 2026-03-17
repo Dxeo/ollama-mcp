@@ -4,10 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"sort"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 )
+
+const preprocessCodePrompt = "Format and clean this code. Return only the cleaned code:\n%s"
 
 // Handlers holds the shared state needed by tool handlers.
 type Handlers struct {
@@ -18,13 +22,21 @@ type Handlers struct {
 
 // HandleReasonTask performs reasoning/code generation using the chat model.
 func (h *Handlers) HandleReasonTask(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	slog.Info("handling tool call", "tool", "reason_task")
+
 	prompt, err := request.RequireString("prompt")
 	if err != nil {
+		slog.Error("invalid parameter", "tool", "reason_task", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("missing required parameter: %v", err)), nil
+	}
+	if strings.TrimSpace(prompt) == "" {
+		slog.Error("empty input", "tool", "reason_task")
+		return mcp.NewToolResultError("prompt must not be empty"), nil
 	}
 
 	result, err := h.ollama.Chat(ctx, h.reasoningModel, prompt)
 	if err != nil {
+		slog.Error("ollama call failed", "tool", "reason_task", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("reasoning failed: %v", err)), nil
 	}
 
@@ -33,18 +45,27 @@ func (h *Handlers) HandleReasonTask(ctx context.Context, request mcp.CallToolReq
 
 // HandleEmbedText generates embeddings for the given text.
 func (h *Handlers) HandleEmbedText(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	slog.Info("handling tool call", "tool", "embed_text")
+
 	text, err := request.RequireString("text")
 	if err != nil {
+		slog.Error("invalid parameter", "tool", "embed_text", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("missing required parameter: %v", err)), nil
+	}
+	if strings.TrimSpace(text) == "" {
+		slog.Error("empty input", "tool", "embed_text")
+		return mcp.NewToolResultError("text must not be empty"), nil
 	}
 
 	embeddings, err := h.ollama.Embed(ctx, h.embeddingModel, text)
 	if err != nil {
+		slog.Error("ollama call failed", "tool", "embed_text", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("embedding failed: %v", err)), nil
 	}
 
 	data, err := json.Marshal(map[string]any{"embeddings": embeddings})
 	if err != nil {
+		slog.Error("json marshal failed", "tool", "embed_text", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal embeddings: %v", err)), nil
 	}
 
@@ -53,18 +74,23 @@ func (h *Handlers) HandleEmbedText(ctx context.Context, request mcp.CallToolRequ
 
 // HandleFilterDocs ranks documents by semantic similarity to a query.
 func (h *Handlers) HandleFilterDocs(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	slog.Info("handling tool call", "tool", "filter_docs")
+
 	query, err := request.RequireString("query")
 	if err != nil {
+		slog.Error("invalid parameter", "tool", "filter_docs", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("missing required parameter: %v", err)), nil
 	}
 
 	documents := request.GetStringSlice("documents", nil)
-	if documents == nil {
-		return mcp.NewToolResultError("missing required parameter: documents"), nil
+	if documents == nil || len(documents) == 0 {
+		slog.Error("empty or missing documents", "tool", "filter_docs")
+		return mcp.NewToolResultError("documents list is empty or missing"), nil
 	}
 
 	queryEmb, err := h.ollama.Embed(ctx, h.embeddingModel, query)
 	if err != nil {
+		slog.Error("failed to embed query", "tool", "filter_docs", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to embed query: %v", err)), nil
 	}
 
@@ -74,13 +100,19 @@ func (h *Handlers) HandleFilterDocs(ctx context.Context, request mcp.CallToolReq
 	}
 	results := make([]scored, 0, len(documents))
 
-	for _, doc := range documents {
+	for i, doc := range documents {
 		docEmb, err := h.ollama.Embed(ctx, h.embeddingModel, doc)
 		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("failed to embed document: %v", err)), nil
+			slog.Warn("skipping document, embedding failed", "tool", "filter_docs", "index", i, "error", err)
+			continue
 		}
 		sim := CosineSimilarity(queryEmb, docEmb)
 		results = append(results, scored{doc: doc, score: sim})
+	}
+
+	if len(results) == 0 {
+		slog.Error("all documents failed to embed", "tool", "filter_docs", "total", len(documents))
+		return mcp.NewToolResultError("all documents failed to embed"), nil
 	}
 
 	sort.Slice(results, func(i, j int) bool {
@@ -94,6 +126,7 @@ func (h *Handlers) HandleFilterDocs(ctx context.Context, request mcp.CallToolReq
 
 	data, err := json.Marshal(map[string]any{"results": ranked})
 	if err != nil {
+		slog.Error("json marshal failed", "tool", "filter_docs", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal results: %v", err)), nil
 	}
 
@@ -102,19 +135,28 @@ func (h *Handlers) HandleFilterDocs(ctx context.Context, request mcp.CallToolReq
 
 // HandlePreprocessCode cleans and formats code using the generate model.
 func (h *Handlers) HandlePreprocessCode(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	slog.Info("handling tool call", "tool", "preprocess_code")
+
 	code, err := request.RequireString("code")
 	if err != nil {
+		slog.Error("invalid parameter", "tool", "preprocess_code", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("missing required parameter: %v", err)), nil
 	}
+	if strings.TrimSpace(code) == "" {
+		slog.Error("empty input", "tool", "preprocess_code")
+		return mcp.NewToolResultError("code must not be empty"), nil
+	}
 
-	prompt := fmt.Sprintf("Format and clean this code. Return only the cleaned code:\n%s", code)
+	prompt := fmt.Sprintf(preprocessCodePrompt, code)
 	result, err := h.ollama.Generate(ctx, h.reasoningModel, prompt)
 	if err != nil {
+		slog.Error("ollama call failed", "tool", "preprocess_code", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("preprocessing failed: %v", err)), nil
 	}
 
 	data, err := json.Marshal(map[string]any{"processed_code": result})
 	if err != nil {
+		slog.Error("json marshal failed", "tool", "preprocess_code", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to marshal result: %v", err)), nil
 	}
 
