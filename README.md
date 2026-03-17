@@ -79,7 +79,7 @@ Add to `~/.claude/settings.json` or project `.mcp.json`:
 }
 ```
 
-This repo ships a [`AGENT.md`](AGENT.md) file with instructions that tell Claude to actively use the ollama-mcp tools. Copy its contents into your project's `AGENT.md` or reference it in your Claude Code settings.
+This repo ships a [AGENT.md](AGENT.md) file with instructions that tell Claude to actively use the ollama-mcp tools. Copy its contents into your project's [AGENT.md](AGENT.md) or reference it in your Claude Code settings.
 
 ### Other MCP Clients
 
