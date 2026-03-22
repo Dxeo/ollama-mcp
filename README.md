@@ -69,7 +69,7 @@ Add to `~/.claude/settings.json` or project `.mcp.json`:
 ```json
 {
   "mcpServers": {
-    "ollama-mcp": {
+    "ollama": {
       "command": "/absolute/path/to/ollama-mcp",
       "env": {
         "REASONING_MODEL": "qwen3:1.7b",
